@@ -1,194 +1,175 @@
-// Simple Team Calendar for FreedomPros
-// Requires: addresses.js
+// Example: Renders a month calendar with event highlights, multi-day merges, and state names above teams.
+// Assumes you have a <table id="calendar"></table> in your HTML and window.addresses loaded.
 
-// ----- CONFIG -----
-const monthNames = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
-
-// ----- HELPERS -----
-function parseDateString(str) {
-  // Accepts "July 22", "July 22 - 23", "July 22-23", "July 22 - July 24"
-  let [start, end] = str.split("-").map(s => s.trim());
-  let startParts = start.split(" ");
-  let startMonth = startParts[0];
-  let startDay = parseInt(startParts[1]);
-  let year = new Date().getFullYear();
-
-  let endMonth, endDay;
-  if (end) {
-    let endParts = end.split(" ");
-    if (endParts.length === 1) {
-      endMonth = startMonth;
-      endDay = parseInt(endParts[0]);
-    } else {
-      endMonth = endParts[0];
-      endDay = parseInt(endParts[1]);
-    }
-  }
-  return {
-    start: new Date(`${startMonth} ${startDay}, ${year}`),
-    end: end ? new Date(`${endMonth || startMonth} ${endDay}, ${year}`) : new Date(`${startMonth} ${startDay}, ${year}`)
+function parseEventDates(event) {
+  // Supports date formats like "June 26 - 27" or "July 3 - 4"
+  const months = {
+    "June": 5,
+    "July": 6,
+    "August": 7,
+    "Sept": 8,
+    "September": 8
   };
+  const dateStr = event.date;
+  const rangeMatch = dateStr.match(/([A-Za-z]+)\s+(\d+)\s*-\s*([A-Za-z]+)?\s*(\d+)/);
+  if (rangeMatch) {
+    const m1 = rangeMatch[1];
+    const d1 = parseInt(rangeMatch[2], 10);
+    const m2 = rangeMatch[3] || m1;
+    const d2 = parseInt(rangeMatch[4], 10);
+    const from = new Date(2025, months[m1], d1);
+    const to = new Date(2025, months[m2], d2);
+    return { from, to };
+  }
+  const singleMatch = dateStr.match(/([A-Za-z]+)\s+(\d+)/);
+  if (singleMatch) {
+    const m = singleMatch[1];
+    const d = parseInt(singleMatch[2], 10);
+    const from = new Date(2025, months[m], d);
+    return { from, to: from };
+  }
+  return null;
 }
 
-function getMonthYearSet(addresses) {
-  // Returns array of {year, month} that have events
-  const set = new Set();
-  addresses.forEach(item => {
-    const { start, end } = parseDateString(item.date);
-    for (
-      let dt = new Date(start.getTime());
-      dt <= end;
-      dt.setDate(dt.getDate() + 1)
-    ) {
-      set.add(`${dt.getFullYear()}-${dt.getMonth()}`);
+function getEventsByDay(events) {
+  // Map YYYY-MM-DD string to event data
+  const map = {};
+  events.forEach(event => {
+    const parsed = parseEventDates(event);
+    if (!parsed) return;
+    let curr = new Date(parsed.from);
+    while (curr <= parsed.to) {
+      const key = curr.toISOString().slice(0, 10);
+      map[key] = map[key] || [];
+      map[key].push(event);
+      curr.setDate(curr.getDate() + 1);
     }
   });
-  return Array.from(set).map(x => {
-    const [year, month] = x.split("-").map(Number);
-    return { year, month };
-  }).sort((a, b) => (a.year - b.year) || (a.month - b.month));
+  return map;
 }
 
-function pad(num) {
-  return num < 10 ? "0" + num : num;
+function areSameEvent(e1, e2) {
+  return e1 && e2 && e1.name === e2.name;
 }
 
-// ----- CALENDAR LOGIC -----
 function renderCalendar(year, month, events) {
+  // month: 0-indexed (June = 5)
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const today = new Date();
+  const eventMap = getEventsByDay(events);
 
-  let html = `<table class="calendar-table"><thead><tr>`;
-  for (const day of ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]) {
-    html += `<th>${day}</th>`;
+  const table = document.getElementById("calendar");
+  table.innerHTML = "";
+
+  // Header
+  const thead = document.createElement("thead");
+  const hdr = document.createElement("tr");
+  ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(d => {
+    const th = document.createElement("th");
+    th.innerText = d;
+    hdr.appendChild(th);
+  });
+  thead.appendChild(hdr);
+  table.appendChild(thead);
+
+  // Body
+  const tbody = document.createElement("tbody");
+  let tr = document.createElement("tr");
+
+  let date = new Date(year, month, 1);
+  for (let i = 0; i < date.getDay(); i++) {
+    const td = document.createElement("td");
+    td.className = "calendar-day empty";
+    tr.appendChild(td);
   }
-  html += `</tr></thead><tbody><tr>`;
 
-  let dayOfWeek = firstDay.getDay();
-  for (let i = 0; i < dayOfWeek; i++) html += `<td></td>`;
+  while (date.getMonth() === month) {
+    const key = date.toISOString().slice(0, 10);
+    const eventsToday = eventMap[key] || [];
+    let renderEvent = null;
+    let spanDays = 1;
 
-  for (let date = 1; date <= lastDay.getDate(); date++) {
-    const thisDay = new Date(year, month, date);
-    const dateStr = `${year}-${pad(month + 1)}-${pad(date)}`;
-    const eventsOnThisDay = events.filter(e =>
-      thisDay >= e.start && thisDay <= e.end
-    );
-
-    let cellClass = "";
-    if (
-      today.getFullYear() === year &&
-      today.getMonth() === month &&
-      today.getDate() === date
-    ) cellClass = "today";
-
-    if (eventsOnThisDay.length) {
-      cellClass += " event-day";
-      html += `<td class="${cellClass.trim()}">`;
-      // List all teams on this day
-      for (const ev of eventsOnThisDay) {
-        html += `<div class="event-box" tabindex="0"
-          data-event='${encodeURIComponent(JSON.stringify(ev))}'>
-          <span class="event-state">${ev.state}</span>
-          <span class="event-team">${ev.teams.join(", ")}</span>
-        </div>`;
+    // Multi-day event merge logic
+    if (eventsToday.length > 0) {
+      // Only support rendering the first event per cell for merges
+      const event = eventsToday[0];
+      const parsed = parseEventDates(event);
+      // Only merge if this is the first day or not a continuation
+      if (
+        date.getTime() === parsed.from.getTime() &&
+        parsed.to > parsed.from
+      ) {
+        // Calculate how many days this event should span within this week
+        let span = 1;
+        let temp = new Date(date);
+        while (
+          temp < parsed.to &&
+          temp.getMonth() === month &&
+          span + date.getDay() <= 7 // stay within week
+        ) {
+          temp.setDate(temp.getDate() + 1);
+          span++;
+        }
+        spanDays = span;
+        renderEvent = event;
+      } else if (parsed.from < date && date <= parsed.to) {
+        // This day is part of a merge, skip rendering (will be covered by colspan)
+        date.setDate(date.getDate() + 1);
+        if (date.getDay() === 0) {
+          tbody.appendChild(tr);
+          tr = document.createElement("tr");
+        }
+        continue;
+      } else {
+        renderEvent = event;
       }
-      html += `</td>`;
-    } else {
-      html += `<td class="${cellClass.trim()}">${date}</td>`;
     }
-    if ((dayOfWeek + date) % 7 === 0) html += `</tr><tr>`;
+
+    // Build cell
+    const td = document.createElement("td");
+    td.className = "calendar-day";
+    td.innerHTML = `<span class="calendar-day-number">${date.getDate()}</span>`;
+
+    if (renderEvent) {
+      td.classList.add("highlight");
+      if (spanDays > 1) {
+        td.colSpan = spanDays;
+        td.classList.add("event-merged");
+      }
+      td.innerHTML += `
+        <div class="calendar-state">${renderEvent.state || ""}</div>
+        <div class="calendar-teams">${renderEvent.contacts.map(c => c.team).join(', ')}</div>
+      `;
+    }
+
+    tr.appendChild(td);
+
+    // Move to next day/cell
+    date.setDate(date.getDate() + 1);
+
+    // End of week or last day
+    if (tr.children.length === 7 || date.getMonth() !== month) {
+      // Fill out row if at month end
+      while (tr.children.length < 7) {
+        const td = document.createElement("td");
+        td.className = "calendar-day empty";
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+      tr = document.createElement("tr");
+    }
   }
-  html += `</tr></tbody></table>`;
-  document.getElementById("calendar").innerHTML = html;
 
-  // Add event listeners for event-box
-  document.querySelectorAll('.event-box').forEach(box => {
-    box.onclick = showEventModal;
-    box.onkeypress = function(e) { if (e.key === "Enter") showEventModal.call(this, e); };
-  });
+  table.appendChild(tbody);
 }
 
-function showEventModal(e) {
-  let event = JSON.parse(decodeURIComponent(this.getAttribute('data-event')));
-  document.getElementById("modal-title").textContent = event.teams.join(", ");
-  let html = `
-    <p><strong>State:</strong> ${event.state}</p>
-    <p><strong>Office Address:</strong> ${event.address}</p>
-    <p><strong>Date:</strong> ${event.dateDisplay}</p>
-    <div><strong>POCs:</strong>
-      <ul>
-        ${event.contacts.map(group =>
-          group.people.map(
-            p => `<li>${p.name}${p.phone ? ` (${p.phone})` : ""}</li>`
-          ).join("")
-        ).join("")}
-      </ul>
-    </div>
-  `;
-  document.getElementById("modal-details").innerHTML = html;
-  document.getElementById("event-modal").style.display = "block";
-}
+// Example usage:
+// renderCalendar(2025, 5, window.addresses); // June 2025
+// renderCalendar(2025, 6, window.addresses); // July 2025
+// renderCalendar(2025, 7, window.addresses); // August 2025
 
-function hideEventModal() {
-  document.getElementById("event-modal").style.display = "none";
-}
-
-// ----- NAVIGATION -----
-function renderCalendarNav(monthYearArr, currentIdx) {
-  let nav = '';
-  if (currentIdx > 0)
-    nav += `<button id="cal-prev">Previous</button>`;
-  nav += `<span><b>${monthNames[monthYearArr[currentIdx].month]} ${monthYearArr[currentIdx].year}</b></span>`;
-  if (currentIdx < monthYearArr.length - 1)
-    nav += `<button id="cal-next">Next</button>`;
-  document.getElementById("calendar-nav").innerHTML = nav;
-  if (currentIdx > 0)
-    document.getElementById("cal-prev").onclick = () => showMonth(monthYearArr, currentIdx - 1);
-  if (currentIdx < monthYearArr.length - 1)
-    document.getElementById("cal-next").onclick = () => showMonth(monthYearArr, currentIdx + 1);
-}
-
-// ----- DATA PREP -----
-function buildEventObjects(addresses) {
-  return addresses.flatMap(item => {
-    const { start, end } = parseDateString(item.date);
-    let stateMatch = item.address.match(/, ([A-Z]{2,})[ ,]/);
-    let state = stateMatch ? stateMatch[1] : "";
-    let teams = [];
-    if (item.contacts) teams = item.contacts.map(group => group.team);
-    return [{
-      ...item,
-      start,
-      end,
-      state,
-      teams,
-      dateDisplay: item.date
-    }];
-  });
-}
-
-// ----- MAIN -----
-let monthYearArr = getMonthYearSet(window.addresses);
-let events = buildEventObjects(window.addresses);
-let currentMonthIdx = 0;
-
-function showMonth(monthYearArr, idx) {
-  currentMonthIdx = idx;
-  renderCalendarNav(monthYearArr, currentMonthIdx);
-  const { year, month } = monthYearArr[currentMonthIdx];
-  renderCalendar(year, month, events);
-}
-
-// Modal close
-document.addEventListener("DOMContentLoaded", function() {
-  showMonth(monthYearArr, 0);
-  document.getElementById("close-modal").onclick = hideEventModal;
-  window.onclick = function(event) {
-    if (event.target === document.getElementById("event-modal"))
-      hideEventModal();
-  };
+// Optionally, call renderCalendar with the current month on page load:
+document.addEventListener("DOMContentLoaded", function () {
+  // Set to whichever month you want to display by default
+  renderCalendar(2025, 5, window.addresses); // June 2025
 });
