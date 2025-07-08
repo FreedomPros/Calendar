@@ -1,175 +1,26 @@
-body {
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: #f4f6f9;
-  margin: 0;
-  padding: 0 0 32px 0;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FreedomPros Team Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="calendar.css">
+</head>
+<body>
+  <h1>FreedomPros Team Calendar</h1>
+  <div id="calendar-nav"></div>
+  <div id="calendar"></div>
 
-h1 {
-  text-align: center;
-  margin: 1em 0 0.5em 0;
-  color: #2b3a52;
-  font-size: 2em;
-}
+  <!-- Modal for event details -->
+  <div id="event-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="close-modal" class="close">&times;</span>
+      <h2 id="modal-title"></h2>
+      <div id="modal-details"></div>
+    </div>
+  </div>
 
-#calendar-nav {
-  text-align: center;
-  margin: 1em 0;
-}
-
-#calendar-nav button {
-  background: #2b3a52;
-  color: #fff;
-  border: none;
-  padding: 0.4em 1.2em;
-  border-radius: 5px;
-  font-size: 1em;
-  margin: 0 1em;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-#calendar-nav button:hover {
-  background: #3e518b;
-}
-
-.calendar-table {
-  margin: 0 auto;
-  border-collapse: collapse;
-  background: #fff;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-  width: 95%;
-  max-width: 900px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.calendar-table th, .calendar-table td {
-  width: 14.285%;
-  height: 70px;
-  text-align: center;
-  vertical-align: top;
-  border: 1px solid #e7eaf3;
-  font-size: 1em;
-  position: relative;
-}
-
-.calendar-table th {
-  background: #f2f4f7;
-  color: #2b3a52;
-  font-weight: 700;
-  padding: 0.5em 0;
-}
-
-.calendar-table td.today {
-  background: #e0ebfa !important;
-  border: 2px solid #2b3a52;
-}
-
-.calendar-table td.event-day {
-  background: #fcf2d8;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.calendar-table td.event-day:hover,
-.calendar-table td.event-day:focus-within {
-  background: #f9e5a7;
-}
-
-.event-box {
-  background: #f9d859;
-  border-radius: 6px;
-  margin: 5px 3px;
-  padding: 7px 5px 5px 5px;
-  cursor: pointer;
-  font-size: 0.93em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  outline: none;
-  border: 2px solid #f9d859;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: border 0.2s, background 0.2s;
-}
-.event-box:focus, .event-box:hover {
-  border: 2px solid #2b3a52;
-  background: #ffe596;
-}
-
-.event-state {
-  font-weight: bold;
-  color: #2b3a52;
-  display: block;
-  font-size: 1em;
-}
-
-.event-team {
-  color: #6d6d6d;
-  font-size: 0.97em;
-  margin-top: 2px;
-}
-
-.modal {
-  display: none; 
-  position: fixed;
-  z-index: 1000;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  overflow: auto;
-  background-color: rgba(43,58,82,0.25);
-}
-
-.modal-content {
-  background-color: #fff;
-  margin: 8% auto;
-  padding: 1.6em 2em;
-  border: 1px solid #888;
-  width: 90%;
-  max-width: 440px;
-  border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(43,58,82,0.15);
-  position: relative;
-}
-
-.close {
-  color: #2b3a52;
-  position: absolute;
-  top: 14px;
-  right: 22px;
-  font-size: 2.2em;
-  font-weight: bold;
-  cursor: pointer;
-  transition: color 0.2s;
-  z-index: 10;
-}
-.close:hover, .close:focus {
-  color: #d11a2a;
-}
-
-#modal-title {
-  margin-top: 0;
-  color: #2b3a52;
-  font-size: 1.3em;
-}
-
-#modal-details {
-  color: #2b3a52;
-  font-size: 1.06em;
-}
-
-#modal-details ul {
-  margin: 0.7em 0 0.4em 1.2em;
-  padding: 0;
-}
-
-@media (max-width: 700px) {
-  .calendar-table th, .calendar-table td {
-    height: 44px;
-    font-size: 0.85em;
-    padding: 0;
-  }
-  .modal-content {
-    padding: 1em 0.5em;
-    max-width: 97vw;
-  }
-}
+  <script src="addresses.js"></script>
+  <script src="calendar.js"></script>
+</body>
+</html>
