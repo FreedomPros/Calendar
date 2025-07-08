@@ -1,14 +1,22 @@
-// Calendar rendering logic with event highlights, multi-day merges, and state names above teams.
-// Assumes a <table id="calendar"></table> in your HTML and window.addresses loaded.
+// calendar.js: Shows all months (June, July, August) stacked with events
+
+const MONTHS_TO_SHOW = [
+  { year: 2025, monthIdx: 5 }, // June 2025
+  { year: 2025, monthIdx: 6 }, // July 2025
+  { year: 2025, monthIdx: 7 }, // August 2025
+];
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
 
 function parseEventDates(event) {
-  // Supports date formats like "June 26 - 27" or "July 3 - 4"
   const months = {
     "June": 5,
     "July": 6,
     "August": 7,
-    "Sept": 8,
-    "September": 8
+    "Sept": 8, "September": 8
   };
   const dateStr = event.date;
   const rangeMatch = dateStr.match(/([A-Za-z]+)\s+(\d+)\s*-\s*([A-Za-z]+)?\s*(\d+)/);
@@ -32,7 +40,6 @@ function parseEventDates(event) {
 }
 
 function getEventsByDay(events) {
-  // Map YYYY-MM-DD string to event data
   const map = {};
   events.forEach(event => {
     const parsed = parseEventDates(event);
@@ -54,8 +61,8 @@ function renderCalendar(year, month, events) {
   const lastDay = new Date(year, month + 1, 0);
   const eventMap = getEventsByDay(events);
 
-  const table = document.getElementById("calendar");
-  table.innerHTML = "";
+  const table = document.createElement("table");
+  table.className = "calendar";
 
   // Header
   const thead = document.createElement("thead");
@@ -87,21 +94,18 @@ function renderCalendar(year, month, events) {
 
     // Multi-day event merge logic
     if (eventsToday.length > 0) {
-      // Only support rendering the first event per cell for merges
       const event = eventsToday[0];
       const parsed = parseEventDates(event);
-      // Only merge if this is the first day or not a continuation
       if (
         date.getTime() === parsed.from.getTime() &&
         parsed.to > parsed.from
       ) {
-        // Calculate how many days this event should span within this week
         let span = 1;
         let temp = new Date(date);
         while (
           temp < parsed.to &&
           temp.getMonth() === month &&
-          span + date.getDay() <= 7 // stay within week
+          span + date.getDay() <= 7
         ) {
           temp.setDate(temp.getDate() + 1);
           span++;
@@ -109,7 +113,7 @@ function renderCalendar(year, month, events) {
         spanDays = span;
         renderEvent = event;
       } else if (parsed.from < date && date <= parsed.to) {
-        // This day is part of a merge, skip rendering (will be covered by colspan)
+        // Skip cell for event merge
         date.setDate(date.getDate() + 1);
         if (date.getDay() === 0) {
           tbody.appendChild(tr);
@@ -121,7 +125,6 @@ function renderCalendar(year, month, events) {
       }
     }
 
-    // Build cell
     const td = document.createElement("td");
     td.className = "calendar-day";
     td.innerHTML = `<span class="calendar-day-number">${date.getDate()}</span>`;
@@ -140,12 +143,9 @@ function renderCalendar(year, month, events) {
 
     tr.appendChild(td);
 
-    // Move to next day/cell
     date.setDate(date.getDate() + 1);
 
-    // End of week or last day
     if (tr.children.length === 7 || date.getMonth() !== month) {
-      // Fill out row if at month end
       while (tr.children.length < 7) {
         const td = document.createElement("td");
         td.className = "calendar-day empty";
@@ -155,12 +155,21 @@ function renderCalendar(year, month, events) {
       tr = document.createElement("tr");
     }
   }
-
   table.appendChild(tbody);
+  return table;
 }
 
-// Example usage: render June 2025 on page load
+// Render all months stacked
 document.addEventListener("DOMContentLoaded", function () {
-  renderCalendar(2025, 5, window.addresses); // June 2025
-  // Optionally, add controls to change month/year if needed
+  const container = document.getElementById("all-calendars");
+  MONTHS_TO_SHOW.forEach(({ year, monthIdx }) => {
+    const monthSection = document.createElement('div');
+    monthSection.className = 'month-section';
+    const title = document.createElement('div');
+    title.className = 'month-title';
+    title.innerText = `${MONTH_NAMES[monthIdx]} ${year}`;
+    monthSection.appendChild(title);
+    monthSection.appendChild(renderCalendar(year, monthIdx, window.addresses));
+    container.appendChild(monthSection);
+  });
 });
