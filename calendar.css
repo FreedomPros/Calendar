@@ -3,7 +3,7 @@
   border-collapse: collapse;
   background: #f7fafc;
   font-family: inherit;
-  margin: 0 auto;
+  margin: 0 auto 18px auto;
 }
 
 .calendar th,
@@ -24,7 +24,7 @@
   background: #eaf3fb;
   color: #23446e;
   font-weight: 600;
-  font-size: 1.07em;
+  font-size: 1.09em;
   border-bottom: 2.5px solid #c2d3e9;
   height: 38px;
   text-align: center;
@@ -34,7 +34,7 @@
   position: absolute;
   top: 6px;
   left: 8px;
-  font-size: 1.08em;
+  font-size: 1.09em;
   color: #243657;
   font-weight: bold;
   z-index: 2;
