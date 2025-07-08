@@ -1,175 +1,136 @@
-body {
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: #f4f6f9;
-  margin: 0;
-  padding: 0 0 32px 0;
-}
-
-h1 {
-  text-align: center;
-  margin: 1em 0 0.5em 0;
-  color: #2b3a52;
-  font-size: 2em;
-}
-
-#calendar-nav {
-  text-align: center;
-  margin: 1em 0;
-}
-
-#calendar-nav button {
-  background: #2b3a52;
-  color: #fff;
-  border: none;
-  padding: 0.4em 1.2em;
-  border-radius: 5px;
-  font-size: 1em;
-  margin: 0 1em;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-#calendar-nav button:hover {
-  background: #3e518b;
-}
-
-.calendar-table {
-  margin: 0 auto;
+/* CALENDAR GRID BASE STYLES */
+.calendar {
+  width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-  width: 95%;
-  max-width: 900px;
-  border-radius: 8px;
-  overflow: hidden;
+  background: #f7fafc;
+  font-family: inherit;
+  margin: 0 auto;
 }
 
-.calendar-table th, .calendar-table td {
+.calendar th,
+.calendar td {
+  border: 1px solid #e0eaf3;
   width: 14.285%;
-  height: 70px;
-  text-align: center;
+  height: 80px;
   vertical-align: top;
-  border: 1px solid #e7eaf3;
-  font-size: 1em;
+  text-align: left;
   position: relative;
-}
-
-.calendar-table th {
-  background: #f2f4f7;
-  color: #2b3a52;
-  font-weight: 700;
-  padding: 0.5em 0;
-}
-
-.calendar-table td.today {
-  background: #e0ebfa !important;
-  border: 2px solid #2b3a52;
-}
-
-.calendar-table td.event-day {
-  background: #fcf2d8;
-  cursor: pointer;
+  background: #fff;
+  padding: 6px 6px 2px 8px;
   transition: background 0.2s;
+  box-sizing: border-box;
 }
 
-.calendar-table td.event-day:hover,
-.calendar-table td.event-day:focus-within {
-  background: #f9e5a7;
+.calendar th {
+  background: #eaf3fb;
+  color: #23446e;
+  font-weight: 600;
+  font-size: 1.07em;
+  border-bottom: 2.5px solid #c2d3e9;
+  height: 38px;
+  text-align: center;
 }
 
-.event-box {
-  background: #f9d859;
-  border-radius: 6px;
-  margin: 5px 3px;
-  padding: 7px 5px 5px 5px;
-  cursor: pointer;
-  font-size: 0.93em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  outline: none;
-  border: 2px solid #f9d859;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: border 0.2s, background 0.2s;
-}
-.event-box:focus, .event-box:hover {
-  border: 2px solid #2b3a52;
-  background: #ffe596;
-}
-
-.event-state {
-  font-weight: bold;
-  color: #2b3a52;
-  display: block;
-  font-size: 1em;
-}
-
-.event-team {
-  color: #6d6d6d;
-  font-size: 0.97em;
-  margin-top: 2px;
-}
-
-.modal {
-  display: none; 
-  position: fixed;
-  z-index: 1000;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  overflow: auto;
-  background-color: rgba(43,58,82,0.25);
-}
-
-.modal-content {
-  background-color: #fff;
-  margin: 8% auto;
-  padding: 1.6em 2em;
-  border: 1px solid #888;
-  width: 90%;
-  max-width: 440px;
-  border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(43,58,82,0.15);
-  position: relative;
-}
-
-.close {
-  color: #2b3a52;
+/* DAY NUMBER: always visible, top left */
+.calendar-day-number {
   position: absolute;
-  top: 14px;
-  right: 22px;
-  font-size: 2.2em;
+  top: 6px;
+  left: 8px;
+  font-size: 1.08em;
+  color: #243657;
   font-weight: bold;
-  cursor: pointer;
-  transition: color 0.2s;
-  z-index: 10;
-}
-.close:hover, .close:focus {
-  color: #d11a2a;
+  z-index: 2;
+  background: transparent;
+  pointer-events: none;
 }
 
-#modal-title {
-  margin-top: 0;
-  color: #2b3a52;
-  font-size: 1.3em;
+/* HIGHLIGHT ENTIRE CELL FOR EVENTS */
+.calendar-day.event,
+.calendar-day.highlight {
+  background: #ffe399 !important;
+  /* Orange pastel highlight */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #ffb20022;
+  color: #222;
+  font-weight: bold;
+  /* Remove outline or border from inner content */
 }
 
-#modal-details {
-  color: #2b3a52;
-  font-size: 1.06em;
+.calendar-day.event .calendar-day-number,
+.calendar-day.highlight .calendar-day-number {
+  color: #b88200;
 }
 
-#modal-details ul {
-  margin: 0.7em 0 0.4em 1.2em;
+/* REMOVE EVENT BOX/BORDER AROUND TEAM NAME */
+.calendar-event,
+.calendar-teams {
+  background: none !important;
+  border: none !important;
   padding: 0;
+  margin: 0;
+  box-shadow: none !important;
+  font-weight: 600;
+  font-size: 1.08em;
+  color: #1a3860;
+  display: block;
+  margin-top: 25px;
+  margin-bottom: 2px;
+  line-height: 1.12em;
 }
 
+/* STATE NAME ABOVE TEAMS */
+.calendar-state {
+  display: block;
+  font-size: 0.97em;
+  font-weight: bold;
+  color: #23446e;
+  margin-bottom: 2px;
+  margin-top: 22px;
+  letter-spacing: 0.02em;
+}
+
+/* MULTI-DAY EVENTS: MERGE CELLS (when using colspan/rowspan) */
+.calendar-day.event-merged {
+  background: #ffe399 !important;
+  border-radius: 8px;
+  color: #222;
+  font-weight: bold;
+}
+
+/* MAKE SURE EMPTY DAYS LOOK NORMAL */
+.calendar-day.empty {
+  background: #f7fafc;
+  border: none;
+  box-shadow: none;
+}
+
+/* RESPONSIVE: MOBILE VIEW */
 @media (max-width: 700px) {
-  .calendar-table th, .calendar-table td {
-    height: 44px;
-    font-size: 0.85em;
-    padding: 0;
+  .calendar th,
+  .calendar td {
+    font-size: 0.93em;
+    padding: 3px 2px 2px 5px;
+    height: 54px;
   }
-  .modal-content {
-    padding: 1em 0.5em;
-    max-width: 97vw;
+  .calendar-event, .calendar-teams {
+    font-size: 0.96em;
+    margin-top: 18px;
   }
+  .calendar-state {
+    font-size: 0.88em;
+    margin-top: 14px;
+  }
+  .calendar-day-number {
+    font-size: 0.98em;
+    top: 3px;
+    left: 5px;
+  }
+}
+
+/* OPTIONAL: ADD HOVER FOR EVENT DAYS */
+.calendar-day.event:hover,
+.calendar-day.highlight:hover,
+.calendar-day.event-merged:hover {
+  background: #ffe5b3 !important;
+  cursor: pointer;
 }
