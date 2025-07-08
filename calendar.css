@@ -1,4 +1,3 @@
-/* CALENDAR GRID BASE STYLES */
 .calendar {
   width: 100%;
   border-collapse: collapse;
@@ -31,7 +30,6 @@
   text-align: center;
 }
 
-/* DAY NUMBER: always visible, top left */
 .calendar-day-number {
   position: absolute;
   top: 6px;
@@ -44,16 +42,13 @@
   pointer-events: none;
 }
 
-/* HIGHLIGHT ENTIRE CELL FOR EVENTS */
 .calendar-day.event,
 .calendar-day.highlight {
   background: #ffe399 !important;
-  /* Orange pastel highlight */
   border-radius: 8px;
   box-shadow: 0 2px 8px #ffb20022;
   color: #222;
   font-weight: bold;
-  /* Remove outline or border from inner content */
 }
 
 .calendar-day.event .calendar-day-number,
@@ -61,7 +56,6 @@
   color: #b88200;
 }
 
-/* REMOVE EVENT BOX/BORDER AROUND TEAM NAME */
 .calendar-event,
 .calendar-teams {
   background: none !important;
@@ -78,7 +72,6 @@
   line-height: 1.12em;
 }
 
-/* STATE NAME ABOVE TEAMS */
 .calendar-state {
   display: block;
   font-size: 0.97em;
@@ -89,7 +82,6 @@
   letter-spacing: 0.02em;
 }
 
-/* MULTI-DAY EVENTS: MERGE CELLS (when using colspan/rowspan) */
 .calendar-day.event-merged {
   background: #ffe399 !important;
   border-radius: 8px;
@@ -97,14 +89,12 @@
   font-weight: bold;
 }
 
-/* MAKE SURE EMPTY DAYS LOOK NORMAL */
 .calendar-day.empty {
   background: #f7fafc;
   border: none;
   box-shadow: none;
 }
 
-/* RESPONSIVE: MOBILE VIEW */
 @media (max-width: 700px) {
   .calendar th,
   .calendar td {
@@ -127,7 +117,6 @@
   }
 }
 
-/* OPTIONAL: ADD HOVER FOR EVENT DAYS */
 .calendar-day.event:hover,
 .calendar-day.highlight:hover,
 .calendar-day.event-merged:hover {
