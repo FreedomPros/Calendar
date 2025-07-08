@@ -2,77 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>2025 Event Calendar</title>
+  <title>Team Events Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="calendar.css">
-  <script src="addresses.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; }
-    .calendar-container { max-width: 900px; margin: 30px auto; }
+    body {
+      background: #f7fafc;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 980px;
+      margin: 38px auto 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 18px #b6cbe522;
+      padding: 24px 24px 42px 24px;
+    }
+    h1 {
+      color: #23446e;
+      margin-bottom: 14px;
+      font-size: 2em;
+    }
+    .calendar-nav {
+      margin-bottom: 18px;
+    }
   </style>
 </head>
 <body>
-  <div class="calendar-container">
-    <h2>2025 Event Calendar</h2>
+  <div class="container">
+    <h1>2025 Team Events Calendar</h1>
+    <div class="calendar-nav">
+      <!-- Add controls here if you want to change months -->
+    </div>
     <table id="calendar" class="calendar"></table>
   </div>
-  <script>
-    // --- Calendar rendering logic ---
-    // Helper: month name, days in month, month index base-0
-    const MONTHS = [
-      { name: 'June', days: 30, index: 5 },
-      { name: 'July', days: 31, index: 6 },
-      { name: 'August', days: 31, index: 7 }
-    ];
-
-    // Parse a "June 26 - 27" or "July 3 - 4" or "July 17, 18, 19" etc.
-    function parseEventDates(event) {
-      const result = [];
-      if (!event.date) return result;
-      // Handle range e.g. "July 3 - 4"
-      let match = event.date.match(/^([A-Za-z]+)\s+(\d+)\s*-\s*(\d+)$/);
-      if (match) {
-        const month = match[1];
-        let startDay = parseInt(match[2]), endDay = parseInt(match[3]);
-        result.push({ month, day: startDay });
-        for(let d = startDay+1; d <= endDay; ++d)
-          result.push({ month, day: d });
-        return result;
-      }
-      // Handle list e.g. "July 17, 18, 19"
-      match = event.date.match(/^([A-Za-z]+)\s+(\d+(?:,\s*\d+)+)$/);
-      if (match) {
-        const month = match[1];
-        return match[2].split(',').map(s => ({ month, day: parseInt(s) }));
-      }
-      // Handle single day e.g. "August 8"
-      match = event.date.match(/^([A-Za-z]+)\s+(\d+)$/);
-      if (match) {
-        return [{ month: match[1], day: parseInt(match[2]) }];
-      }
-      return [];
-    }
-
-    // Build a map: for each month and day, store the event (for multi-day, only first day will hold the event object)
-    function buildCalendarMap(addresses) {
-      const cal = {};
-      for(const month of MONTHS) cal[month.name] = {};
-      addresses.forEach(event => {
-        const days = parseEventDates(event);
-        days.forEach(({ month, day }, idx) => {
-          cal[month][day] = cal[month][day] || {};
-          if (idx === 0) {
-            cal[month][day].event = event;
-            cal[month][day].eventSpan = days.length;
-          } else {
-            cal[month][day].mergeToPrev = true; // Mark to merge/skip rendering
-          }
-        });
-      });
-      return cal;
-    }
-
-    function renderCalendarTable(month, calMap) {
-      const daysInMonth = month.days;
-      // Find the weekday index of 1st (assume June/July/August 2025 are correct)
-      const firstDayWeekday = new Date(2025, month.index, 1).getDay(); // 0=Sun
-      let html = '<tr
+  <script src="addresses.js"></script>
+  <script src="calendar.js"></script>
+</body>
+</html>
