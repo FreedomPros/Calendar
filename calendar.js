@@ -1,175 +1,125 @@
-// Example: Renders a month calendar with event highlights, multi-day merges, and state names above teams.
-// Assumes you have a <table id="calendar"></table> in your HTML and window.addresses loaded.
-
-function parseEventDates(event) {
-  // Supports date formats like "June 26 - 27" or "July 3 - 4"
-  const months = {
-    "June": 5,
-    "July": 6,
-    "August": 7,
-    "Sept": 8,
-    "September": 8
-  };
-  const dateStr = event.date;
-  const rangeMatch = dateStr.match(/([A-Za-z]+)\s+(\d+)\s*-\s*([A-Za-z]+)?\s*(\d+)/);
-  if (rangeMatch) {
-    const m1 = rangeMatch[1];
-    const d1 = parseInt(rangeMatch[2], 10);
-    const m2 = rangeMatch[3] || m1;
-    const d2 = parseInt(rangeMatch[4], 10);
-    const from = new Date(2025, months[m1], d1);
-    const to = new Date(2025, months[m2], d2);
-    return { from, to };
-  }
-  const singleMatch = dateStr.match(/([A-Za-z]+)\s+(\d+)/);
-  if (singleMatch) {
-    const m = singleMatch[1];
-    const d = parseInt(singleMatch[2], 10);
-    const from = new Date(2025, months[m], d);
-    return { from, to: from };
-  }
-  return null;
+.calendar {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f7fafc;
+  font-family: inherit;
+  margin: 0 auto;
 }
 
-function getEventsByDay(events) {
-  // Map YYYY-MM-DD string to event data
-  const map = {};
-  events.forEach(event => {
-    const parsed = parseEventDates(event);
-    if (!parsed) return;
-    let curr = new Date(parsed.from);
-    while (curr <= parsed.to) {
-      const key = curr.toISOString().slice(0, 10);
-      map[key] = map[key] || [];
-      map[key].push(event);
-      curr.setDate(curr.getDate() + 1);
-    }
-  });
-  return map;
+.calendar th,
+.calendar td {
+  border: 1px solid #e0eaf3;
+  width: 14.285%;
+  height: 80px;
+  vertical-align: top;
+  text-align: left;
+  position: relative;
+  background: #fff;
+  padding: 6px 6px 2px 8px;
+  transition: background 0.2s;
+  box-sizing: border-box;
 }
 
-function areSameEvent(e1, e2) {
-  return e1 && e2 && e1.name === e2.name;
+.calendar th {
+  background: #eaf3fb;
+  color: #23446e;
+  font-weight: 600;
+  font-size: 1.07em;
+  border-bottom: 2.5px solid #c2d3e9;
+  height: 38px;
+  text-align: center;
 }
 
-function renderCalendar(year, month, events) {
-  // month: 0-indexed (June = 5)
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const eventMap = getEventsByDay(events);
+.calendar-day-number {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 1.08em;
+  color: #243657;
+  font-weight: bold;
+  z-index: 2;
+  background: transparent;
+  pointer-events: none;
+}
 
-  const table = document.getElementById("calendar");
-  table.innerHTML = "";
+.calendar-day.event,
+.calendar-day.highlight {
+  background: #ffe399 !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #ffb20022;
+  color: #222;
+  font-weight: bold;
+}
 
-  // Header
-  const thead = document.createElement("thead");
-  const hdr = document.createElement("tr");
-  ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(d => {
-    const th = document.createElement("th");
-    th.innerText = d;
-    hdr.appendChild(th);
-  });
-  thead.appendChild(hdr);
-  table.appendChild(thead);
+.calendar-day.event .calendar-day-number,
+.calendar-day.highlight .calendar-day-number {
+  color: #b88200;
+}
 
-  // Body
-  const tbody = document.createElement("tbody");
-  let tr = document.createElement("tr");
+.calendar-event,
+.calendar-teams {
+  background: none !important;
+  border: none !important;
+  padding: 0;
+  margin: 0;
+  box-shadow: none !important;
+  font-weight: 600;
+  font-size: 1.08em;
+  color: #1a3860;
+  display: block;
+  margin-top: 25px;
+  margin-bottom: 2px;
+  line-height: 1.12em;
+}
 
-  let date = new Date(year, month, 1);
-  for (let i = 0; i < date.getDay(); i++) {
-    const td = document.createElement("td");
-    td.className = "calendar-day empty";
-    tr.appendChild(td);
+.calendar-state {
+  display: block;
+  font-size: 0.97em;
+  font-weight: bold;
+  color: #23446e;
+  margin-bottom: 2px;
+  margin-top: 22px;
+  letter-spacing: 0.02em;
+}
+
+.calendar-day.event-merged {
+  background: #ffe399 !important;
+  border-radius: 8px;
+  color: #222;
+  font-weight: bold;
+}
+
+.calendar-day.empty {
+  background: #f7fafc;
+  border: none;
+  box-shadow: none;
+}
+
+@media (max-width: 700px) {
+  .calendar th,
+  .calendar td {
+    font-size: 0.93em;
+    padding: 3px 2px 2px 5px;
+    height: 54px;
   }
-
-  while (date.getMonth() === month) {
-    const key = date.toISOString().slice(0, 10);
-    const eventsToday = eventMap[key] || [];
-    let renderEvent = null;
-    let spanDays = 1;
-
-    // Multi-day event merge logic
-    if (eventsToday.length > 0) {
-      // Only support rendering the first event per cell for merges
-      const event = eventsToday[0];
-      const parsed = parseEventDates(event);
-      // Only merge if this is the first day or not a continuation
-      if (
-        date.getTime() === parsed.from.getTime() &&
-        parsed.to > parsed.from
-      ) {
-        // Calculate how many days this event should span within this week
-        let span = 1;
-        let temp = new Date(date);
-        while (
-          temp < parsed.to &&
-          temp.getMonth() === month &&
-          span + date.getDay() <= 7 // stay within week
-        ) {
-          temp.setDate(temp.getDate() + 1);
-          span++;
-        }
-        spanDays = span;
-        renderEvent = event;
-      } else if (parsed.from < date && date <= parsed.to) {
-        // This day is part of a merge, skip rendering (will be covered by colspan)
-        date.setDate(date.getDate() + 1);
-        if (date.getDay() === 0) {
-          tbody.appendChild(tr);
-          tr = document.createElement("tr");
-        }
-        continue;
-      } else {
-        renderEvent = event;
-      }
-    }
-
-    // Build cell
-    const td = document.createElement("td");
-    td.className = "calendar-day";
-    td.innerHTML = `<span class="calendar-day-number">${date.getDate()}</span>`;
-
-    if (renderEvent) {
-      td.classList.add("highlight");
-      if (spanDays > 1) {
-        td.colSpan = spanDays;
-        td.classList.add("event-merged");
-      }
-      td.innerHTML += `
-        <div class="calendar-state">${renderEvent.state || ""}</div>
-        <div class="calendar-teams">${renderEvent.contacts.map(c => c.team).join(', ')}</div>
-      `;
-    }
-
-    tr.appendChild(td);
-
-    // Move to next day/cell
-    date.setDate(date.getDate() + 1);
-
-    // End of week or last day
-    if (tr.children.length === 7 || date.getMonth() !== month) {
-      // Fill out row if at month end
-      while (tr.children.length < 7) {
-        const td = document.createElement("td");
-        td.className = "calendar-day empty";
-        tr.appendChild(td);
-      }
-      tbody.appendChild(tr);
-      tr = document.createElement("tr");
-    }
+  .calendar-event, .calendar-teams {
+    font-size: 0.96em;
+    margin-top: 18px;
   }
-
-  table.appendChild(tbody);
+  .calendar-state {
+    font-size: 0.88em;
+    margin-top: 14px;
+  }
+  .calendar-day-number {
+    font-size: 0.98em;
+    top: 3px;
+    left: 5px;
+  }
 }
 
-// Example usage:
-// renderCalendar(2025, 5, window.addresses); // June 2025
-// renderCalendar(2025, 6, window.addresses); // July 2025
-// renderCalendar(2025, 7, window.addresses); // August 2025
-
-// Optionally, call renderCalendar with the current month on page load:
-document.addEventListener("DOMContentLoaded", function () {
-  // Set to whichever month you want to display by default
-  renderCalendar(2025, 5, window.addresses); // June 2025
-});
+.calendar-day.event:hover,
+.calendar-day.highlight:hover,
+.calendar-day.event-merged:hover {
+  background: #ffe5b3 !important;
+  cursor: pointer;
+}
