@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Team Events Calendar</title>
+  <title>Taylor McCarthy Summer Training 2025</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="calendar.css">
   <style>
@@ -13,7 +13,7 @@
       padding: 0;
     }
     .container {
-      max-width: 980px;
+      max-width: 1020px;
       margin: 38px auto 0 auto;
       background: #fff;
       border-radius: 12px;
@@ -22,21 +22,33 @@
     }
     h1 {
       color: #23446e;
-      margin-bottom: 14px;
-      font-size: 2em;
+      margin-bottom: 30px;
+      font-size: 2.2em;
+      text-align: center;
+      letter-spacing: 1px;
     }
-    .calendar-nav {
-      margin-bottom: 18px;
+    .month-section {
+      margin-bottom: 60px;
+    }
+    .month-title {
+      font-size: 1.7em;
+      color: #1a3860;
+      text-align: center;
+      font-weight: 700;
+      margin: 35px 0 10px 0;
+      letter-spacing: 1px;
+    }
+    @media (max-width: 700px) {
+      .container { padding: 8px 1vw 24px 1vw; }
+      h1 { font-size: 1.15em; }
+      .month-title { font-size: 1.08em; margin: 22px 0 6px 0; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>2025 Team Events Calendar</h1>
-    <div class="calendar-nav">
-      <!-- Add controls here if you want to change months -->
-    </div>
-    <table id="calendar" class="calendar"></table>
+    <h1>Taylor McCarthy Summer Training 2025</h1>
+    <div id="all-calendars"></div>
   </div>
   <script src="addresses.js"></script>
   <script src="calendar.js"></script>
