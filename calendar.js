@@ -1,7 +1,4 @@
-// calendar.js: Renders all months stacked, each day shows its own number (no merged cells).
-// Clicking an event name or highlighted cell shows the event address in a popup.
-// Team names show participant count. Event title banner spans all days, but no cell merging.
-// Assumes window.addresses is loaded and each contact may have participants.
+// Improved calendar.js: Lined up boxes, each event day highlighted, event banner spans across, no merging, click shows address
 
 const MONTHS_TO_SHOW = [
   { year: 2025, monthIdx: 5 }, // June 2025
@@ -14,13 +11,13 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-// Parse event date ranges into { from, to }
 function parseEventDates(event) {
   const months = {
     "June": 5,
     "July": 6,
     "August": 7,
-    "Sept": 8, "September": 8
+    "Aug": 7,
+    "September": 8, "Sep": 8
   };
   const dateStr = event.date;
   const rangeMatch = dateStr.match(/([A-Za-z]+)\s+(\d+)\s*-\s*([A-Za-z]+)?\s*(\d+)/);
@@ -43,7 +40,7 @@ function parseEventDates(event) {
   return null;
 }
 
-// Map YYYY-MM-DD string to array of events (for each day)
+// Map each event day (YYYY-MM-DD) to associated events
 function getEventsByDay(events) {
   const map = {};
   events.forEach(event => {
@@ -60,23 +57,33 @@ function getEventsByDay(events) {
   return map;
 }
 
-// Returns true if this is the first day of this event (to print banner)
-function isEventStart(date, event) {
-  const parsed = parseEventDates(event);
-  return parsed && date.getTime() === parsed.from.getTime();
+// Returns an array of all event ranges for the given month/year
+function getEventRangesForMonth(events, year, month) {
+  const ranges = [];
+  events.forEach(event => {
+    const parsed = parseEventDates(event);
+    if (!parsed) return;
+    let from = parsed.from, to = parsed.to;
+    // Only for this month
+    if (from.getFullYear() === year && from.getMonth() === month ||
+        to.getFullYear() === year && to.getMonth() === month ||
+        (from < new Date(year, month+1, 1) && to >= new Date(year, month, 1))
+      ) {
+      // Clamp start/end to this month
+      const rangeStart = new Date(Math.max(from, new Date(year, month, 1)));
+      const rangeEnd = new Date(Math.min(to, new Date(year, month+1, 0)));
+      ranges.push({event, start: rangeStart, end: rangeEnd});
+    }
+  });
+  return ranges;
 }
 
-// Returns true if this is part of the event range
-function isEventDay(date, event) {
-  const parsed = parseEventDates(event);
-  return parsed && date >= parsed.from && date <= parsed.to;
-}
-
-// Renders a single month's calendar as a table
+// Render a single month's calendar as a table
 function renderCalendar(year, month, events) {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const eventMap = getEventsByDay(events);
+  const eventRanges = getEventRangesForMonth(events, year, month);
 
   const table = document.createElement("table");
   table.className = "calendar";
@@ -94,8 +101,8 @@ function renderCalendar(year, month, events) {
 
   // Body
   const tbody = document.createElement("tbody");
-  let tr = document.createElement("tr");
 
+  let tr = document.createElement("tr");
   let date = new Date(year, month, 1);
   for (let i = 0; i < date.getDay(); i++) {
     const td = document.createElement("td");
@@ -103,66 +110,71 @@ function renderCalendar(year, month, events) {
     tr.appendChild(td);
   }
 
-  // For each day cell
+  // For each week row
   while (date.getMonth() === month) {
+    let weekDay = date.getDay();
+
+    // For each day cell
     const key = date.toISOString().slice(0, 10);
     const eventsToday = eventMap[key] || [];
     const td = document.createElement("td");
     td.className = "calendar-day";
     td.innerHTML = `<span class="calendar-day-number">${date.getDate()}</span>`;
 
+    // Highlight if any event
     if (eventsToday.length > 0) {
       td.classList.add("highlight");
+      td.style.position = "relative";
+    }
 
-      // For all events on this day, check if it's the start, and print the banner (state+team+participants)
-      eventsToday.forEach(event => {
-        // Only render the banner on the first day of the event
+    // If this is the FIRST day of an event range (for this event this month), render banner spanning the days
+    eventRanges.forEach(({event, start, end}) => {
+      const bannerStart = start.getTime();
+      const bannerEnd = end.getTime();
+      if (date.getTime() === bannerStart) {
+        // Span width: number of days in this row, up to event end
+        let span = 1;
+        let temp = new Date(date);
+        let colOffset = temp.getDay();
+        while (
+          temp < end &&
+          temp.getMonth() === month &&
+          span + colOffset <= 7 // don't cross week
+        ) {
+          temp.setDate(temp.getDate() + 1);
+          span++;
+        }
+        // Banner div overlays the row, but each cell is separate
+        const banner = document.createElement('div');
+        banner.className = 'event-banner';
+        banner.style.gridColumn = `span ${span}`;
+        banner.style.width = `calc(${span}00% + ${(span-1)*1}px)`;
+        banner.style.left = "0";
+        banner.style.pointerEvents = "auto";
+        banner.tabIndex = 0;
+        banner.title = "Click for address";
+
+        // Team(s) and participants
+        let teams = event.contacts
+          .map(c => c.team + (c.participants ? ` (${c.participants})` : ''))
+          .join(', ');
+
+        banner.innerHTML = `
+          <span class="calendar-state">${event.state}</span>
+          <span class="calendar-teams">${teams}</span>
+        `;
+        banner.onclick = e => { e.stopPropagation(); showAddressPopup(event, start, end); };
+        td.appendChild(banner);
+      }
+    });
+
+    if (eventsToday.length > 0) {
+      // Clicking any highlighted box also shows event info (first event)
+      td.onclick = () => {
+        const event = eventsToday[0];
         const parsed = parseEventDates(event);
-        if (isEventStart(date, event)) {
-          // CSS: .event-banner stretches visually across days; we use a unique class and data attribute
-          const from = new Date(parsed.from);
-          const to = new Date(parsed.to);
-          const colCount = Math.round((to - from) / (1000*60*60*24)) + 1;
-
-          // Construct teams + participants
-          let teams = event.contacts
-            .map(c =>
-              c.team +
-              (c.participants ? ` (${c.participants})` : '')
-            ).join(', ');
-
-          // Banner spans the event range (use data attributes for JS/CSS to visually connect)
-          td.innerHTML += `
-            <div class="event-banner"
-              data-event-name="${event.name.replace(/"/g,'&quot;')}"
-              data-event-range="${colCount}"
-              data-event-from="${from.toISOString().slice(0,10)}"
-              data-event-to="${to.toISOString().slice(0,10)}"
-              tabindex="0"
-              title="Click for address"
-              style="cursor:pointer;">
-              <span class="calendar-state">${event.state}</span>
-              <span class="calendar-teams">${teams}</span>
-            </div>
-          `;
-          // Click to show address
-          td.querySelector('.event-banner').addEventListener('click', e => {
-            e.stopPropagation();
-            showAddressPopup(event, from, to);
-          });
-        }
-      });
-
-      // For all event days (including non-start days), clicking the box also shows address
-      td.addEventListener('click', e => {
-        // If clicked on banner, banner handler will run
-        if (!e.target.classList.contains('event-banner')) {
-          // Just show first event if multiple
-          const event = eventsToday[0];
-          const parsed = parseEventDates(event);
-          showAddressPopup(event, parsed.from, parsed.to);
-        }
-      });
+        showAddressPopup(event, parsed.from, parsed.to);
+      };
     }
 
     tr.appendChild(td);
@@ -187,7 +199,6 @@ function renderCalendar(year, month, events) {
 
 // Show address modal/popup
 function showAddressPopup(event, from, to) {
-  // Remove existing if present
   let old = document.getElementById('address-popup');
   if (old) old.remove();
 
@@ -238,10 +249,8 @@ function showAddressPopup(event, from, to) {
   div.onclick = (e) => { if (e.target === div) div.remove(); };
 }
 
-// Render all months stacked
 document.addEventListener("DOMContentLoaded", function () {
   const container = document.getElementById("all-calendars");
-  // Clear if re-rendering
   container.innerHTML = '';
   MONTHS_TO_SHOW.forEach(({ year, monthIdx }) => {
     const monthSection = document.createElement('div');
