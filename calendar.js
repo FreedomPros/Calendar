@@ -1,7 +1,4 @@
-// Modern calendar: Multi-day events centered, only one participants count, no repeat team/state text, address on click.
-
-const START_DATE = new Date(2025, 6, 26); // July is 6
-const END_DATE = new Date(2025, 8, 19);   // September is 8
+// Calendar: Multi-day events as one centered rounded block spanning both/all date boxes, matching the provided design.
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -9,12 +6,10 @@ const MONTH_NAMES = [
 ];
 
 function parseEventDates(event) {
-  // Accepts "July 17, 18, 19" or "July 17 - 19"
   const months = {
     "June": 5, "July": 6, "August": 7, "Aug": 7, "September": 8, "Sep": 8
   };
   const dateStr = event.date.trim();
-  // "July 17, 18, 19"
   const multiDayComma = dateStr.match(/([A-Za-z]+)\s+(\d+),\s*(\d+),\s*(\d+)/);
   if (multiDayComma) {
     const m = months[multiDayComma[1]];
@@ -28,7 +23,6 @@ function parseEventDates(event) {
       ]
     };
   }
-  // "July 17 - 19"
   const range = dateStr.match(/([A-Za-z]+)\s+(\d+)\s*-\s*([A-Za-z]+)?\s*(\d+)/);
   if (range) {
     const m1 = months[range[1]];
@@ -44,7 +38,6 @@ function parseEventDates(event) {
     }
     return { from: new Date(2025, m1, d1), to: end, days };
   }
-  // "July 17"
   const single = dateStr.match(/([A-Za-z]+)\s+(\d+)/);
   if (single) {
     const m = months[single[1]];
@@ -69,9 +62,8 @@ function eventDaysMap(events) {
   return map;
 }
 
-// For multi-day events, only show the label centered across the spanned cells
 function getEventSpans(events) {
-  // For each event, store { key: start-ISO, span: n, event }
+  // For each event, store { key: start-ISO, span: n, event, parsed }
   let spans = {};
   events.forEach(event => {
     const parsed = parseEventDates(event);
@@ -82,20 +74,31 @@ function getEventSpans(events) {
   return spans;
 }
 
-function dateInRange(date) {
-  return date >= START_DATE && date <= END_DATE;
+function getCalendarRange(events) {
+  // Find earliest and latest event dates for full calendar coverage
+  let min = null, max = null;
+  events.forEach(event => {
+    const parsed = parseEventDates(event);
+    if (!parsed) return;
+    if (!min || parsed.from < min) min = parsed.from;
+    if (!max || parsed.to > max) max = parsed.to;
+  });
+  // Show full months for min/max
+  min = new Date(min.getFullYear(), min.getMonth(), 1);
+  max = new Date(max.getFullYear(), max.getMonth() + 1, 0);
+  return { min, max };
 }
 
 function renderCalendar(events) {
-  // Determine which months to show
+  // Determine months to show based on event range
+  const { min, max } = getCalendarRange(events);
   let months = [];
-  let year = START_DATE.getFullYear(), month = START_DATE.getMonth();
-  while (year < END_DATE.getFullYear() || (year === END_DATE.getFullYear() && month <= END_DATE.getMonth())) {
+  let year = min.getFullYear(), month = min.getMonth();
+  while (year < max.getFullYear() || (year === max.getFullYear() && month <= max.getMonth())) {
     months.push({ year, month });
     if (month === 11) { year++; month = 0; } else { month++; }
   }
 
-  // Build events/day maps
   const dayEventMap = eventDaysMap(events);
   const eventSpans = getEventSpans(events);
 
@@ -103,7 +106,6 @@ function renderCalendar(events) {
   all.innerHTML = "";
 
   months.forEach(({ year, month }) => {
-    // Section Title
     const monthSection = document.createElement('div');
     monthSection.className = 'month-section';
     const title = document.createElement('div');
@@ -117,7 +119,6 @@ function renderCalendar(events) {
     title.style.margin = "30px 0 10px 0";
     monthSection.appendChild(title);
 
-    // Table
     const table = document.createElement("table");
     table.className = "calendar";
 
@@ -147,63 +148,43 @@ function renderCalendar(events) {
       const iso = d.toISOString().slice(0,10);
       const td = document.createElement("td");
       td.className = "calendar-day";
-
-      if (!dateInRange(d)) {
-        td.className += " empty";
-        tr.appendChild(td);
-        d.setDate(d.getDate() + 1);
-        if (tr.children.length === 7) { tbody.appendChild(tr); tr = document.createElement("tr"); }
-        continue;
-      }
-
       td.innerHTML = `<span class="calendar-day-number">${d.getDate()}</span>`;
+      td.style.position = "relative";
 
-      // Only show event block in the FIRST cell of a multi-day span
-      let eventBlocks = [];
-      let renderedEventIds = new Set();
-
-      // If this day is the start of a multi-day event, render the block and reserve future cells
+      // Check if this cell should start a multi-day event block
       if (eventSpans[iso]) {
         const { event, parsed, span } = eventSpans[iso];
-        // Check if this event fits in this row
         let colIdx = tr.children.length;
         let maxSpan = Math.min(span, 7 - colIdx);
 
-        // Only render if not already rendered in a previous row (for multi-week events)
-        let showBlock = true;
-        // For events crossing weeks, must check if this start cell is within its full days
-        if (colIdx !== 0 && parsed.days.length > (7-colIdx)) {
-          // Only render in first column of new week for multi-week event
-          showBlock = false;
-        }
-        if (showBlock) {
-          renderedEventIds.add(event.name);
-          const block = document.createElement("div");
-          block.className = "event-block";
-          block.style.gridColumn = `span ${maxSpan}`;
-          block.style.textAlign = "center";
-          block.style.justifyContent = "center";
-          block.style.alignItems = "center";
-          block.style.display = "flex";
-          block.style.flexDirection = "column";
-          block.innerHTML =
-            `<span class="event-state">${event.state ? event.state.toUpperCase() : ""}</span>
-             <span class="event-teams">${event.contacts.map(c=>c.team).join(', ')}${event.participants ? ` (${event.participants})` : ""}</span>`;
-          block.onclick = (e) => {
-            e.stopPropagation();
-            showAddressPopup(event);
-          };
-          block.style.position = "absolute";
-          block.style.top = "0";
-          block.style.left = "0";
-          block.style.right = "0";
-          block.style.height = "90%";
-          block.style.margin = "auto";
-          td.appendChild(block);
-        }
+        // Build the event block
+        const block = document.createElement("div");
+        block.className = "event-block";
+        block.style.gridColumn = `span ${maxSpan}`;
+        block.style.textAlign = "center";
+        block.style.justifyContent = "center";
+        block.style.alignItems = "center";
+        block.style.display = "flex";
+        block.style.flexDirection = "column";
+        block.style.position = "absolute";
+        block.style.top = "0";
+        block.style.left = "0";
+        block.style.right = "0";
+        block.style.height = "100%";
+        block.style.width = `calc(${maxSpan*100}% + ${(maxSpan-1)*1}px)`;
+        block.innerHTML =
+          `<span class="event-state">${event.state ? event.state.toUpperCase() : ""}</span>
+           <span class="event-teams">${event.contacts.map(c=>c.team).join(', ')}</span>
+           <span class="event-participants">(${event.participants})</span>`;
+        block.onclick = (e) => {
+          e.stopPropagation();
+          showAddressPopup(event);
+        };
+
+        td.appendChild(block);
       }
 
-      // If this is a continuation cell of a multi-day event, highlight but don't repeat text
+      // If this cell is part of a multi-day event (but not starting), highlight (but don't show block)
       let isInMultiEvent = false;
       Object.values(eventSpans).forEach(({ event, parsed }) => {
         if (parsed.days.slice(1).some(day => day.toISOString().slice(0,10) === iso)) {
@@ -214,17 +195,17 @@ function renderCalendar(events) {
         td.className += " highlight";
       }
 
-      // If single-day event, or multiple events start on this day
+      // If a single-day event starts here and not part of multi-day
       if (dayEventMap[iso]) {
         dayEventMap[iso].forEach(({ event, parsed }) => {
-          // Only render if this is the first day of this event (already handled above for multi-day)
-          if (parsed.days.length === 1 && !renderedEventIds.has(event.name)) {
+          if (parsed.days.length === 1) {
             const block = document.createElement("div");
             block.className = "event-block";
             block.style.textAlign = "center";
             block.innerHTML =
               `<span class="event-state">${event.state ? event.state.toUpperCase() : ""}</span>
-               <span class="event-teams">${event.contacts.map(c=>c.team).join(', ')}${event.participants ? ` (${event.participants})` : ""}</span>`;
+               <span class="event-teams">${event.contacts.map(c=>c.team).join(', ')}</span>
+               <span class="event-participants">(${event.participants})</span>`;
             block.onclick = (e) => {
               e.stopPropagation();
               showAddressPopup(event);
