@@ -1,5 +1,3 @@
-// Calendar: Multi-day events as one centered rounded block spanning both/all date boxes, matching the provided design.
-
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -48,7 +46,6 @@ function parseEventDates(event) {
 }
 
 function eventDaysMap(events) {
-  // Map ISO date string => [event, ...]
   const map = {};
   events.forEach(event => {
     const parsed = parseEventDates(event);
@@ -63,7 +60,6 @@ function eventDaysMap(events) {
 }
 
 function getEventSpans(events) {
-  // For each event, store { key: start-ISO, span: n, event, parsed }
   let spans = {};
   events.forEach(event => {
     const parsed = parseEventDates(event);
@@ -75,7 +71,6 @@ function getEventSpans(events) {
 }
 
 function getCalendarRange(events) {
-  // Find earliest and latest event dates for full calendar coverage
   let min = null, max = null;
   events.forEach(event => {
     const parsed = parseEventDates(event);
@@ -83,14 +78,28 @@ function getCalendarRange(events) {
     if (!min || parsed.from < min) min = parsed.from;
     if (!max || parsed.to > max) max = parsed.to;
   });
-  // Show full months for min/max
   min = new Date(min.getFullYear(), min.getMonth(), 1);
   max = new Date(max.getFullYear(), max.getMonth() + 1, 0);
   return { min, max };
 }
 
+function formatTeamNames(event) {
+  let teamNames = event.contacts.map(c => c.team);
+  if (teamNames.length > 2) {
+    return teamNames.slice(0,2).join('<br>') + '<br>...';
+  }
+  return teamNames.join('<br>');
+}
+
+function formatTeamNamesDesktop(event) {
+  let teamNames = event.contacts.map(c => c.team);
+  if (teamNames.length > 2) {
+    return teamNames.slice(0,2).join(', ') + ', ...';
+  }
+  return teamNames.join(', ');
+}
+
 function renderCalendar(events) {
-  // Determine months to show based on event range
   const { min, max } = getCalendarRange(events);
   let months = [];
   let year = min.getFullYear(), month = min.getMonth();
@@ -109,14 +118,8 @@ function renderCalendar(events) {
     const monthSection = document.createElement('div');
     monthSection.className = 'month-section';
     const title = document.createElement('div');
-    title.className = 'month-title';
-    title.innerText = `${MONTH_NAMES[month]} ${year}`;
-    title.style.fontSize = "1.4em";
-    title.style.color = "#ef3b22";
-    title.style.fontWeight = "800";
-    title.style.textAlign = "center";
-    title.style.letterSpacing = "0.04em";
-    title.style.margin = "30px 0 10px 0";
+    title.className = 'month-title centered-title';
+    title.innerText = `${MONTH_NAMES[month]}`; // Removed year
     monthSection.appendChild(title);
 
     const table = document.createElement("table");
@@ -157,10 +160,8 @@ function renderCalendar(events) {
         let colIdx = tr.children.length;
         let maxSpan = Math.min(span, 7 - colIdx);
 
-        // ---- MOBILE-FRIENDLY TEAM NAMES ----
         let isMobile = window.innerWidth <= 700;
-        let teamNames = event.contacts.map(c => c.team);
-        let teamsHTML = isMobile ? teamNames.join('<br>') : teamNames.join(', ');
+        let teamsHTML = isMobile ? formatTeamNames(event) : formatTeamNamesDesktop(event);
 
         const block = document.createElement("div");
         block.className = "event-block";
@@ -204,8 +205,7 @@ function renderCalendar(events) {
         dayEventMap[iso].forEach(({ event, parsed }) => {
           if (parsed.days.length === 1) {
             let isMobile = window.innerWidth <= 700;
-            let teamNames = event.contacts.map(c => c.team);
-            let teamsHTML = isMobile ? teamNames.join('<br>') : teamNames.join(', ');
+            let teamsHTML = isMobile ? formatTeamNames(event) : formatTeamNamesDesktop(event);
 
             const block = document.createElement("div");
             block.className = "event-block";
@@ -288,5 +288,11 @@ function showAddressPopup(event) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Center the <h1> and remove 2025 from the title
+  const h1 = document.querySelector("h1");
+  if (h1) {
+    h1.classList.add("centered-title");
+    h1.textContent = "Taylor McCarthy Summer Training";
+  }
   renderCalendar(window.addresses);
 });
