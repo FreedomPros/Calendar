@@ -332,9 +332,9 @@ window.addresses = [
     date: "Sep 15 - 16"
   },
   {
-    name: "187 & META PROS PR",
+    name: "187 & META PROS (55) PR",
     state: "Puerto Rico",
-    participants: "",
+    participants: "55",
     address: "151 Calle de San Francisco, 1st floor. San Juan, Puerto Rico",
     coords: [18.4655, -66.1164],
     contacts: [
