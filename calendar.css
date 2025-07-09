@@ -75,8 +75,8 @@
 
 .event-block .event-teams {
   color: #252525;
-  font-weight: 800;
-  font-size: 1.09em;
+  font-weight: 700;
+  font-size: 0.90em; /* made smaller */
   text-transform: none;
   letter-spacing: 0.01em;
   margin-bottom: 1px;
@@ -120,7 +120,7 @@
     letter-spacing: 0.015em;
   }
   .event-block .event-teams {
-    font-size: 0.96em !important;
+    font-size: 0.77em !important; /* even smaller on mobile */
     font-weight: 700;
     margin-bottom: 0;
     line-height: 1.13;
@@ -143,5 +143,19 @@
     padding: 2px 1px 1px 4px !important;
     font-size: 0.98em;
     height: 39px;
+  }
+}
+.centered-title {
+  text-align: center;
+  width: 100%;
+  margin: 0 auto 32px auto;
+  font-size: 2.05em;
+  color: #222;
+  letter-spacing: 0.01em;
+  font-weight: 900;
+}
+@media (max-width: 700px) {
+  .centered-title {
+    font-size: 1.15em;
   }
 }
