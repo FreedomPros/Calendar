@@ -32,8 +32,8 @@
 
 .calendar-day-number {
   position: absolute;
-  top: 6px;
-  left: 8px;
+  top: 7px;
+  left: 10px;
   font-size: 1.09em;
   color: #243657;
   font-weight: bold;
@@ -51,39 +51,35 @@
   box-shadow: none;
 }
 
-.event-banner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 200%;
-  min-width: 100%;
-  z-index: 5;
-  text-align: left;
+.event-label {
+  display: block;
+  margin-top: 26px;
+  margin-left: 0;
+  margin-right: 0;
   font-size: 1em;
-  line-height: 1.15em;
-  font-weight: 800;
-  color: #193c6b;
-  background: transparent;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  white-space: nowrap;
+  font-weight: 700;
+  color: #1a3860;
+  line-height: 1.13em;
+  z-index: 1;
+  position: relative;
+  word-break: break-word;
+  white-space: normal;
 }
 
-.event-banner .calendar-state {
+.event-label .calendar-state {
+  font-size: .97em;
   font-weight: bold;
-  font-size: 1em;
-  margin: 0 0 0 0;
-  color: #193c6b;
+  color: #23446e;
+  margin: 0 0 2px 0;
   letter-spacing: 0.02em;
   display: block;
 }
 
-.event-banner .calendar-teams {
+.event-label .calendar-teams {
   font-size: 1em;
+  color: #222;
   font-weight: bold;
-  color: #111;
-  margin-left: 0;
+  display: block;
 }
 
 @media (max-width: 700px) {
@@ -93,8 +89,12 @@
     padding: 3px 2px 2px 5px;
     height: 54px;
   }
-  .event-banner .calendar-state { font-size: .9em; }
-  .event-banner .calendar-teams { font-size: .9em; }
+  .event-label {
+    font-size: .94em;
+    margin-top: 17px;
+  }
+  .event-label .calendar-state { font-size: .92em; }
+  .event-label .calendar-teams { font-size: .92em; }
   .calendar-day-number {
     font-size: 0.98em;
     top: 3px;
