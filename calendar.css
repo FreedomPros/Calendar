@@ -1,5 +1,106 @@
-/* ... existing desktop styles ... */
+.calendar {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-family: inherit;
+  margin: 0 auto 18px auto;
+  box-shadow: 0 1px 12px #ef3b2220;
+}
 
+.calendar th,
+.calendar td {
+  border: 1px solid #e0eaf3;
+  width: 14.285%;
+  height: 110px;
+  vertical-align: top;
+  text-align: left;
+  position: relative;
+  background: #fff;
+  padding: 8px 8px 2px 12px;
+  box-sizing: border-box;
+}
+
+.calendar th {
+  background: #fff1ee;
+  color: #ef3b22;
+  font-weight: 800;
+  font-size: 1.1em;
+  border-bottom: 2.5px solid #ef3b2240;
+  height: 38px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.calendar-day-number {
+  position: absolute;
+  top: 8px;
+  left: 13px;
+  font-size: 1.13em;
+  color: #1a1a1a;
+  font-weight: 800;
+  z-index: 2;
+  background: transparent;
+  pointer-events: none;
+}
+
+.event-block {
+  background: rgba(239, 59, 34, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 2px 9px #ef3b2235;
+  font-family: 'Montserrat', Arial, sans-serif;
+  padding: 22px 7px 7px 7px;
+  margin-top: 7px;
+  margin-bottom: 0;
+  min-height: 75px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  width: calc(100% - 8px);
+}
+
+.event-block .event-state {
+  color: #ef3b22;
+  font-weight: 800;
+  font-size: 1.12em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  letter-spacing: 0.05em;
+}
+
+.event-block .event-teams {
+  color: #252525;
+  font-weight: 800;
+  font-size: 1.09em;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  margin-bottom: 1px;
+  white-space: pre-line;
+}
+
+.event-block .event-participants {
+  color: #252525;
+  font-weight: 700;
+  font-size: 1.05em;
+  margin-top: 1px;
+  text-transform: none;
+}
+
+.calendar-day.highlight:not(.event-block):not(.empty) {
+  background: rgba(239, 59, 34, 0.09) !important;
+}
+
+.calendar-day.empty {
+  background: #faf7f7;
+  border: 1px solid #f3e5e5;
+}
+
+/* MOBILE OPTIMIZATION */
 @media (max-width: 700px) {
   .event-block {
     font-size: 0.75em !important;
@@ -24,6 +125,7 @@
     margin-bottom: 0;
     line-height: 1.13;
     word-break: break-word;
+    white-space: pre-line;
   }
   .event-block .event-participants {
     font-size: 0.92em !important;
