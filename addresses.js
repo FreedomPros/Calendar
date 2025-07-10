@@ -93,6 +93,7 @@ window.addresses = [
     ],
     date: "July 14 - 15"
   },
+  // --- UPDATED EVENTS: EMPIRE, VITALITY, ENVISION, EXTREME & SLINGERS ---
   {
     name: "EMPIRE, VITALITY, ENVISION, EXTREME & SLINGERS (140) IL",
     state: "Illinois",
@@ -112,8 +113,31 @@ window.addresses = [
         { name: "Jared Monhey", phone: "(801) 631-1493" }
       ] }
     ],
-    date: "July 17, 18, 19"
+    date: "July 17 - 18"
   },
+  {
+    name: "EMPIRE, VITALITY, ENVISION, EXTREME & SLINGERS (140) IL",
+    state: "Illinois",
+    participants: "140",
+    address: "4300 Commerce Ct, unit 240 Lisle, IL 60532",
+    coords: [41.8023, -88.0884],
+    contacts: [
+      { team: "EMPIRE", people: [{ name: "Rocky Niger", phone: "(727) 748-6089" }] },
+      { team: "VITALITY", people: [{ name: "Chayse Kidd", phone: "(208) 360-3024" }] },
+      { team: "ENVISION", people: [{ name: "Drew Sanders", phone: "(918) 706-5054" }] },
+      { team: "EXTREME", people: [
+        { name: "Ben Pappas", phone: "(717) 925-6924" },
+        { name: "Tyler Whimpey", phone: "(801) 696-8581" }
+      ] },
+      { team: "SLINGERS", people: [
+        { name: "Crew Smithson", phone: "(385) 401-9266" },
+        { name: "Jared Monhey", phone: "(801) 631-1493" }
+      ] }
+    ],
+    date: "July 21 - 22"
+  },
+  // --- END UPDATED EVENTS ---
+  // --- UPDATED EVENT: SOL, RELENTLESS & BOUKNIGHT ---
   {
     name: "SOL, RELENTLESS & BOUKNIGHT (40-45) MI",
     state: "Michigan",
@@ -128,8 +152,9 @@ window.addresses = [
       ] },
       { team: "BOUKNIGHT", people: [{ name: "Matt Lent", phone: "(954) 243-1732" }] }
     ],
-    date: "July 22 - 23"
+    date: "July 24 - 25"
   },
+  // --- END UPDATED EVENT ---
   {
     name: "SOLAR MONEY GANG, OMNI, SPARTANS DFBUB, SUPREME (70) TX",
     state: "Texas",
@@ -343,13 +368,12 @@ window.addresses = [
     ],
     date: "Sep 18-19"
   },
-  // ---- NEW EVENT: SWAMP KINGS, HUSTLERS UNITED, ZERO GRAVITY (30) FL ----
   {
     name: "SWAMP KINGS, HUSTLERS UNITED, ZERO GRAVITY (30) FL",
     state: "Florida",
     participants: "30",
     address: "555 Winderley Pl. Ste 127. Maitland, FL 32751",
-    coords: [28.6265, -81.3858], // Approximate Maitland, FL
+    coords: [28.6265, -81.3858],
     contacts: [
       { team: "SWAMP KINGS", people: [{ name: "Matt Lent", phone: "(954) 243-1732" }] },
       { team: "HUSTLERS UNITED", people: [{ name: "Chris Burgess", phone: "(801) 698-6111" }] },
