@@ -83,16 +83,30 @@ function getCalendarRange(events) {
   return { min, max };
 }
 
-// Show only the first two team names and add "..." if more, with no trailing comma or <br>
+// Helper to flatten composite team names by splitting on ',' and '&'
+function flattenTeams(event) {
+  let teams = [];
+  event.contacts.forEach(c => {
+    // Split by comma and/or &
+    let parts = c.team.split(/,|&/);
+    parts.forEach(p => {
+      let trimmed = p.trim();
+      if (trimmed) teams.push(trimmed);
+    });
+  });
+  return teams;
+}
+
+// Only the first two (flattened) team names, then ...
 function formatTeamNames(event) {
-  let teamNames = event.contacts.map(c => c.team);
+  let teamNames = flattenTeams(event);
   if (teamNames.length > 2) {
     return teamNames.slice(0,2).join('<br>') + '<br>...';
   }
   return teamNames.join('<br>');
 }
 function formatTeamNamesDesktop(event) {
-  let teamNames = event.contacts.map(c => c.team);
+  let teamNames = flattenTeams(event);
   if (teamNames.length > 2) {
     let names = teamNames.slice(0,2).join(', ');
     return names + '...';
@@ -100,15 +114,21 @@ function formatTeamNamesDesktop(event) {
   return teamNames.join(', ');
 }
 
-// Add FLORIDA TBD events for Sep 25, 26, 29, 30
+// Add FLORIDA TBD events for Sep 25, 26, 29, 30, but only one per day
 function injectFloridaTBD(events) {
   const dates = ['2025-09-25', '2025-09-26', '2025-09-29', '2025-09-30'];
   dates.forEach(dateStr => {
-    // Only add if not already present
-    if (!events.some(e => {
+    // Only add if no Florida TBD event present for that day
+    const already = events.some(e => {
       const parsed = parseEventDates(e);
-      return parsed && parsed.days.some(day => day.toISOString().slice(0,10) === dateStr);
-    })) {
+      if (!parsed) return false;
+      return parsed.days.some(day => {
+        return (day.toISOString().slice(0,10) === dateStr) &&
+          (e.state && e.state.toUpperCase() === "FLORIDA") &&
+          flattenTeams(e)[0].toUpperCase() === "TBD";
+      });
+    });
+    if (!already) {
       events.push({
         name: "FLORIDA TBD",
         state: "Florida",
@@ -123,7 +143,20 @@ function injectFloridaTBD(events) {
 }
 
 function renderCalendar(events) {
-  // Inject the FLORIDA TBD events if not present
+  // Remove any existing Florida TBD duplicates before injecting
+  const floridaTBDDates = ['2025-09-25', '2025-09-26', '2025-09-29', '2025-09-30'];
+  for (let i = events.length - 1; i >= 0; i--) {
+    const e = events[i];
+    const parsed = parseEventDates(e);
+    if (
+      parsed &&
+      floridaTBDDates.some(d => parsed.days.some(day => day.toISOString().slice(0,10) === d)) &&
+      e.state && e.state.toUpperCase() === "FLORIDA" &&
+      flattenTeams(e)[0].toUpperCase() === "TBD"
+    ) {
+      events.splice(i, 1);
+    }
+  }
   injectFloridaTBD(events);
 
   const { min, max } = getCalendarRange(events);
@@ -228,7 +261,15 @@ function renderCalendar(events) {
 
       // If a single-day event starts here and not part of multi-day
       if (dayEventMap[iso]) {
+        // Only show one Florida TBD event per day
+        let alreadyHasFloridaTBD = false;
         dayEventMap[iso].forEach(({ event, parsed }) => {
+          let isFloridaTBD =
+            event.state && event.state.toUpperCase() === "FLORIDA" &&
+            flattenTeams(event)[0].toUpperCase() === "TBD";
+          if (isFloridaTBD && alreadyHasFloridaTBD) return;
+          if (isFloridaTBD) alreadyHasFloridaTBD = true;
+
           if (parsed.days.length === 1) {
             let isMobile = window.innerWidth <= 700;
             let teamsHTML = isMobile ? formatTeamNames(event) : formatTeamNamesDesktop(event);
