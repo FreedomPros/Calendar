@@ -11,7 +11,7 @@
 .calendar td {
   border: 1px solid #e0eaf3;
   width: 14.285%;
-  height: 110px;
+  height: 145px; /* <-- taller for more room */
   vertical-align: top;
   text-align: left;
   position: relative;
@@ -48,13 +48,13 @@
   border-radius: 16px;
   box-shadow: 0 2px 9px #ef3b2235;
   font-family: 'Montserrat', Arial, sans-serif;
-  padding: 22px 7px 7px 7px;
-  margin-top: 7px;
+  padding: 8px 7px 7px 7px;
+  margin-top: 0;
   margin-bottom: 0;
-  min-height: 75px;
+  min-height: 65px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   cursor: pointer;
   position: absolute;
@@ -62,6 +62,8 @@
   right: 0;
   z-index: 10;
   width: calc(100% - 8px);
+  top: 30px; /* ensure below the date number */
+  height: calc(100% - 30px);
 }
 
 .event-block .event-state {
@@ -76,7 +78,7 @@
 .event-block .event-teams {
   color: #252525;
   font-weight: 700;
-  font-size: 0.90em; /* made smaller */
+  font-size: 0.90em;
   text-transform: none;
   letter-spacing: 0.01em;
   margin-bottom: 1px;
@@ -102,16 +104,23 @@
 
 /* MOBILE OPTIMIZATION */
 @media (max-width: 700px) {
+  .calendar th, .calendar td {
+    height: 99px !important;
+    padding: 2px 1px 1px 4px !important;
+    font-size: 0.98em;
+  }
   .event-block {
     font-size: 0.75em !important;
-    padding: 7px 2px 4px 2px !important;
-    min-height: 32px;
-    margin-top: 1px;
+    padding: 6px 2px 4px 2px !important;
+    min-height: 31px;
+    margin-top: 0;
     border-radius: 9px;
     line-height: 1.18;
     word-break: break-word;
     white-space: normal;
     max-width: 99vw;
+    top: 26px;
+    height: calc(100% - 26px);
   }
   .event-block .event-state {
     font-size: 1em !important;
@@ -120,7 +129,7 @@
     letter-spacing: 0.015em;
   }
   .event-block .event-teams {
-    font-size: 0.77em !important; /* even smaller on mobile */
+    font-size: 0.77em !important;
     font-weight: 700;
     margin-bottom: 0;
     line-height: 1.13;
@@ -138,11 +147,6 @@
     left: 4px;
     top: 2px;
     font-weight: 800;
-  }
-  .calendar th, .calendar td {
-    padding: 2px 1px 1px 4px !important;
-    font-size: 0.98em;
-    height: 39px;
   }
 }
 .centered-title {
