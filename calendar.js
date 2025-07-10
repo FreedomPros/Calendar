@@ -83,6 +83,7 @@ function getCalendarRange(events) {
   return { min, max };
 }
 
+// Show only the first two team names and add "..." if more, with no trailing comma or <br>
 function formatTeamNames(event) {
   let teamNames = event.contacts.map(c => c.team);
   if (teamNames.length > 2) {
@@ -90,16 +91,41 @@ function formatTeamNames(event) {
   }
   return teamNames.join('<br>');
 }
-
 function formatTeamNamesDesktop(event) {
   let teamNames = event.contacts.map(c => c.team);
   if (teamNames.length > 2) {
-    return teamNames.slice(0,2).join(', ') + ', ...';
+    let names = teamNames.slice(0,2).join(', ');
+    return names + '...';
   }
   return teamNames.join(', ');
 }
 
+// Add FLORIDA TBD events for Sep 25, 26, 29, 30
+function injectFloridaTBD(events) {
+  const dates = ['2025-09-25', '2025-09-26', '2025-09-29', '2025-09-30'];
+  dates.forEach(dateStr => {
+    // Only add if not already present
+    if (!events.some(e => {
+      const parsed = parseEventDates(e);
+      return parsed && parsed.days.some(day => day.toISOString().slice(0,10) === dateStr);
+    })) {
+      events.push({
+        name: "FLORIDA TBD",
+        state: "Florida",
+        participants: "",
+        address: "",
+        coords: [27.9944, -81.7603], // Approximate Florida center
+        contacts: [{ team: "TBD", people: [] }],
+        date: "September " + Number(dateStr.split('-')[2])
+      });
+    }
+  });
+}
+
 function renderCalendar(events) {
+  // Inject the FLORIDA TBD events if not present
+  injectFloridaTBD(events);
+
   const { min, max } = getCalendarRange(events);
   let months = [];
   let year = min.getFullYear(), month = min.getMonth();
@@ -119,7 +145,7 @@ function renderCalendar(events) {
     monthSection.className = 'month-section';
     const title = document.createElement('div');
     title.className = 'month-title centered-title';
-    title.innerText = `${MONTH_NAMES[month]}`; // Removed year
+    title.innerText = `${MONTH_NAMES[month]} ${year}`; // Show month + year (e.g., September 2025)
     monthSection.appendChild(title);
 
     const table = document.createElement("table");
