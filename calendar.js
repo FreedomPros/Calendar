@@ -114,19 +114,40 @@ function formatTeamNamesDesktop(event) {
   return teamNames.join(', ');
 }
 
-// Add FLORIDA TBD events for Sep 25, 26, 29, 30, but only one per day
+// Add two multi-day Florida TBD events: Sep 25-26 and Sep 29-30, centered
 function injectFloridaTBD(events) {
-  const dates = ['2025-09-25', '2025-09-26', '2025-09-29', '2025-09-30'];
-  dates.forEach(dateStr => {
-    // Only add if no Florida TBD event present for that day
+  // Remove any existing Florida TBD events for these ranges
+  const floridaRanges = [
+    { from: "2025-09-25", to: "2025-09-26" },
+    { from: "2025-09-29", to: "2025-09-30" },
+  ];
+
+  // Remove old ones
+  for (let i = events.length - 1; i >= 0; i--) {
+    const e = events[i];
+    const parsed = parseEventDates(e);
+    if (
+      parsed &&
+      ((parsed.from.toISOString().slice(0,10) === "2025-09-25" && parsed.to.toISOString().slice(0,10) === "2025-09-26") ||
+       (parsed.from.toISOString().slice(0,10) === "2025-09-29" && parsed.to.toISOString().slice(0,10) === "2025-09-30")) &&
+      e.state && e.state.toUpperCase() === "FLORIDA" &&
+      flattenTeams(e)[0].toUpperCase() === "TBD"
+    ) {
+      events.splice(i, 1);
+    }
+  }
+
+  // Add new ones if not present
+  floridaRanges.forEach(range => {
     const already = events.some(e => {
       const parsed = parseEventDates(e);
-      if (!parsed) return false;
-      return parsed.days.some(day => {
-        return (day.toISOString().slice(0,10) === dateStr) &&
-          (e.state && e.state.toUpperCase() === "FLORIDA") &&
-          flattenTeams(e)[0].toUpperCase() === "TBD";
-      });
+      return (
+        parsed &&
+        parsed.from.toISOString().slice(0,10) === range.from &&
+        parsed.to.toISOString().slice(0,10) === range.to &&
+        e.state && e.state.toUpperCase() === "FLORIDA" &&
+        flattenTeams(e)[0].toUpperCase() === "TBD"
+      );
     });
     if (!already) {
       events.push({
@@ -134,29 +155,15 @@ function injectFloridaTBD(events) {
         state: "Florida",
         participants: "",
         address: "",
-        coords: [27.9944, -81.7603], // Approximate Florida center
+        coords: [27.9944, -81.7603],
         contacts: [{ team: "TBD", people: [] }],
-        date: "September " + Number(dateStr.split('-')[2])
+        date: `September ${Number(range.from.split('-')[2])} - ${Number(range.to.split('-')[2])}`
       });
     }
   });
 }
 
 function renderCalendar(events) {
-  // Remove any existing Florida TBD duplicates before injecting
-  const floridaTBDDates = ['2025-09-25', '2025-09-26', '2025-09-29', '2025-09-30'];
-  for (let i = events.length - 1; i >= 0; i--) {
-    const e = events[i];
-    const parsed = parseEventDates(e);
-    if (
-      parsed &&
-      floridaTBDDates.some(d => parsed.days.some(day => day.toISOString().slice(0,10) === d)) &&
-      e.state && e.state.toUpperCase() === "FLORIDA" &&
-      flattenTeams(e)[0].toUpperCase() === "TBD"
-    ) {
-      events.splice(i, 1);
-    }
-  }
   injectFloridaTBD(events);
 
   const { min, max } = getCalendarRange(events);
@@ -210,6 +217,7 @@ function renderCalendar(events) {
       const iso = d.toISOString().slice(0,10);
       const td = document.createElement("td");
       td.className = "calendar-day";
+      // Place date number in top left, event block will be below it
       td.innerHTML = `<span class="calendar-day-number">${d.getDate()}</span>`;
       td.style.position = "relative";
 
@@ -226,15 +234,15 @@ function renderCalendar(events) {
         block.className = "event-block";
         block.style.gridColumn = `span ${maxSpan}`;
         block.style.textAlign = "center";
-        block.style.justifyContent = "center";
+        block.style.justifyContent = "flex-start";
         block.style.alignItems = "center";
         block.style.display = "flex";
         block.style.flexDirection = "column";
         block.style.position = "absolute";
-        block.style.top = "0";
+        block.style.top = "30px"; // offset for date number (adjusted from "0" to "30px")
         block.style.left = "0";
         block.style.right = "0";
-        block.style.height = "100%";
+        block.style.height = "calc(100% - 30px)";
         block.style.width = `calc(${maxSpan*100}% + ${(maxSpan-1)*1}px)`;
         block.innerHTML =
           `<span class="event-state">${event.state ? event.state.toUpperCase() : ""}</span>
@@ -277,6 +285,15 @@ function renderCalendar(events) {
             const block = document.createElement("div");
             block.className = "event-block";
             block.style.textAlign = "center";
+            block.style.justifyContent = "flex-start";
+            block.style.alignItems = "center";
+            block.style.display = "flex";
+            block.style.flexDirection = "column";
+            block.style.position = "absolute";
+            block.style.top = "30px";
+            block.style.left = "0";
+            block.style.right = "0";
+            block.style.height = "calc(100% - 30px)";
             block.innerHTML =
               `<span class="event-state">${event.state ? event.state.toUpperCase() : ""}</span>
                <span class="event-teams">${teamsHTML}</span>
